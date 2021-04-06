@@ -15,13 +15,13 @@ var upgrader = websocket.Upgrader{
 
 //ServeWebSocket Upgrades de desired route, to an websocket listening point
 //use it in any route you'd like
-func ServeWebSocket(writer http.ResponseWriter, request *http.Request) {
+func ServeWebSocket(writer http.ResponseWriter, request *http.Request, hub *Hub) {
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		log.Fatal("Upgrade error:", err)
 	}
-	defer conn.Close()
+	client := NewClient(hub, conn, make(chan []byte, 256))
+	hub.register <- client
 
-
+	//TODO Criar goroutines para leitura e escrita de mensagens
 }
-

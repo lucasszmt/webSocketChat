@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com.br/lucasszmt/webSocketChat/cmd/server"
 	"github.com/gin-gonic/gin"
 	"html/template"
@@ -9,21 +10,27 @@ import (
 )
 
 func main() {
-	//hub := newHub()
+	//start the hub that controls the messaging and the clients that uses the service
+	hub := server.NewHub()
+	go hub.Run()
 
 	router := gin.New()
-
 	router.GET("/", func(context *gin.Context) {
 		home(context.Writer, context.Request)
 	})
-
 	router.GET("/ws", func(context *gin.Context) {
-		server.ServeWebSocket(context.Writer, context.Request)
+		server.ServeWebSocket(context.Writer, context.Request, hub)
+	})
+	router.GET("/clients", func(context *gin.Context) {
+		connections := make(map[string]bool)
+		for key, _ := range hub.Clients {
+			connections[key.Conn.RemoteAddr().String()] = true
+		}
+		fmt.Println(connections)
+		context.JSON(200, connections)
 	})
 
-
-	err := router.Run(":8080")
-	if err != nil {
+	if err := router.Run(":8080"); err != nil {
 		log.Println(err)
 	}
 
