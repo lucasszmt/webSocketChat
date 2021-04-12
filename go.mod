@@ -1,4 +1,4 @@
-module github.com.br/lucasszmt/webSocketChat
+module github.com/lucasszmt/webSocketChat
 
 go 1.16
 
