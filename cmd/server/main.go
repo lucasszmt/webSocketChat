@@ -1,39 +1,27 @@
 package main
 
 import (
-	"fmt"
-	"github.com.br/lucasszmt/webSocketChat/cmd/server"
-	"github.com/gin-gonic/gin"
+	. "github.com/gin-gonic/gin"
+	"github.com/lucasszmt/webSocketChat/services/websocket"
 	"html/template"
-	"log"
 	"net/http"
 )
 
 func main() {
-	//start the hub that controls the messaging and the clients that uses the service
-	hub := server.NewHub()
-	go hub.Run()
-
-	router := gin.New()
-	router.GET("/", func(context *gin.Context) {
-		home(context.Writer, context.Request)
-	})
-	router.GET("/ws", func(context *gin.Context) {
-		server.ServeWebSocket(context.Writer, context.Request, hub)
-	})
-	router.GET("/clients", func(context *gin.Context) {
-		connections := make(map[string]bool)
-		for key, _ := range hub.Clients {
-			connections[key.Conn.RemoteAddr().String()] = true
-		}
-		fmt.Println(connections)
-		context.JSON(200, connections)
-	})
-
-	if err := router.Run(":8080"); err != nil {
-		log.Println(err)
+	hub := &websocket.Hub{
+		Clients:    make(map[*websocket.Client]string),
+		Register:   make(chan *websocket.Client),
+		Unregister: make(chan *websocket.Client),
 	}
-
+	go hub.Run()
+	router := Default()
+	router.GET("/", func(c *Context) {
+		home(c.Writer, c.Request)
+	})
+	router.GET("/ws", func(c *Context) {
+		websocket.ServeWebsocket(c, hub)
+	})
+	router.Run("0.0.0.0:8080")
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
