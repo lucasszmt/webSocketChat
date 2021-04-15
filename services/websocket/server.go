@@ -24,7 +24,10 @@ func ServeWebsocket(c *gin.Context, h *Hub) {
 		err := client.ReadPump()
 		if err != nil {
 			log.Println(err)
+			//client.conn.Close()
 			return
 		}
 	}()
+	client.Pong()
+	go client.Ping()
 }

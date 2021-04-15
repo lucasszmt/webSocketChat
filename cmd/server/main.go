@@ -4,6 +4,7 @@ import (
 	. "github.com/gin-gonic/gin"
 	"github.com/lucasszmt/webSocketChat/services/websocket"
 	"html/template"
+	"log"
 	"net/http"
 )
 
@@ -21,7 +22,7 @@ func main() {
 	router.GET("/ws", func(c *Context) {
 		websocket.ServeWebsocket(c, hub)
 	})
-	router.Run("0.0.0.0:8080")
+	log.Fatal(router.Run("0.0.0.0:8080"))
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
