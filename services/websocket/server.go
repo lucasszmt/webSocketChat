@@ -19,15 +19,13 @@ func ServeWebsocket(c *gin.Context, h *Hub) {
 		log.Println(err)
 	}
 	client := &Client{conn: conn, Hub: h}
-	//h.Register <- client
 	go func() {
 		err := client.ReadPump()
 		if err != nil {
+			conn.Close()
 			log.Println(err)
-			//client.conn.Close()
 			return
 		}
 	}()
-	client.Pong()
 	go client.Ping()
 }

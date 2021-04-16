@@ -13,9 +13,9 @@ type Client struct {
 }
 
 func (c Client) ReadPump() error {
-	//c.Pong()
+	c.Pong()
 	for {
-		err := c.conn.SetReadDeadline(time.Now().Add(time.Second * 3))
+		err := c.conn.SetReadDeadline(time.Now().Add(time.Second * 10))
 		if err != nil {
 			log.Println("TIME OVER")
 			return err
@@ -39,23 +39,19 @@ func (c Client) Pong() {
 
 func (c Client) Ping() {
 	ticker := time.NewTicker(time.Second * 2)
-	ticekr2 := time.NewTicker(time.Second * 10)
 	for {
 		select {
 		case <-ticker.C:
-			log.Println("Pingueango!")
+			//log.Println("Pingueango!")
 			wserr := c.conn.SetWriteDeadline(time.Now().Add(time.Second * 10))
 			if wserr != nil {
 				log.Println(wserr)
 				return
 			}
-			if err := c.conn.WriteMessage(websocket.PingMessage, []byte("ping")); err != nil {
+			if err := c.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				log.Println(err)
 				return
 			}
-		case <-ticekr2.C:
-			c.conn.Close()
 		}
-
 	}
 }
