@@ -8,6 +8,24 @@ import (
 	"os"
 )
 
+type Client struct {
+	url    string
+	conn   *websocket.Conn
+	dialer *websocket.Dialer
+}
+
+func NewClient(url url.URL, dialer *websocket.Dialer) *Client {
+	c := &Client{url: url.String(), dialer: dialer}
+	c.Dial()
+	return c
+}
+
+func (c *Client) Dial() error {
+	var err error
+	c.conn, _, err = c.dialer.Dial(c.url, nil)
+	return err
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	u := url.URL{
@@ -15,22 +33,17 @@ func main() {
 		Host:   "0.0.0.0:8080",
 		Path:   "/ws",
 	}
-	client := websocket.DefaultDialer
-	conn, _, err := client.Dial(u.String(), nil)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	conn.SetPingHandler(func(string) error {
+	client := NewClient(u, websocket.DefaultDialer)
+	client.conn.SetPingHandler(func(string) error {
 		fmt.Print("Recebi um ping, enviando um pong!")
-		err := conn.WriteMessage(websocket.PongMessage, []byte{})
+		err := client.conn.WriteMessage(websocket.PongMessage, []byte{})
 		if err != nil {
 			return err
 		}
 		return nil
 	})
 	go func() {
-		mt, msg, err := conn.ReadMessage()
+		mt, msg, err := client.conn.ReadMessage()
 		if err != nil {
 			return
 		}
@@ -41,7 +54,7 @@ func main() {
 		if err != nil {
 			return
 		}
-		err = conn.WriteMessage(websocket.TextMessage, line)
+		err = client.conn.WriteMessage(websocket.TextMessage, line)
 		if err != nil {
 			fmt.Println(err)
 			return
